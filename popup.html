@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site Timer & Blocker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🛡️ Site Timer & Blocker</h1>
+      <p class="subtitle">Manage your online time wisely</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="blocked">🚫 Blocked Sites</button>
+      <button class="tab-btn" data-tab="timed">⏱️ Time Limited</button>
+      <button class="tab-btn" data-tab="stats">📊 Stats</button>
+    </div>
+
+    <!-- Blocked Sites Tab -->
+    <div class="tab-content active" id="blocked-tab">
+      <div class="add-section">
+        <input type="text" id="blocked-url-input" placeholder="Enter website URL (e.g., facebook.com)" />
+        <button id="add-blocked-btn" class="btn btn-primary">Add</button>
+      </div>
+      <div class="list-container">
+        <h3>Blocked Websites</h3>
+        <ul id="blocked-list" class="site-list"></ul>
+        <p class="empty-state" id="blocked-empty">No blocked sites yet. Add one above!</p>
+      </div>
+    </div>
+
+    <!-- Time Limited Tab -->
+    <div class="tab-content" id="timed-tab">
+      <div class="add-section">
+        <input type="text" id="timed-url-input" placeholder="Enter website URL (e.g., youtube.com)" />
+        <input type="number" id="time-limit-input" placeholder="Minutes per day" min="1" max="1440" />
+        <button id="add-timed-btn" class="btn btn-primary">Add</button>
+      </div>
+      <div class="list-container">
+        <h3>Time Limited Websites</h3>
+        <ul id="timed-list" class="site-list"></ul>
+        <p class="empty-state" id="timed-empty">No time limits set. Add one above!</p>
+      </div>
+    </div>
+
+    <!-- Stats Tab -->
+    <div class="tab-content" id="stats-tab">
+      <div class="stats-container">
+        <h3>Today's Usage</h3>
+        <div id="stats-list" class="stats-list"></div>
+        <p class="empty-state" id="stats-empty">No activity tracked yet today.</p>
+        <button id="reset-stats-btn" class="btn btn-secondary">Reset Today's Stats</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
