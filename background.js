@@ -50,13 +50,23 @@ async function checkDailyReset() {
 
 // Listen for tab activation
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
-  await handleTabChange(activeInfo.tabId);
+  try {
+    await handleTabChange(activeInfo.tabId);
+  } catch (error) {
+    // Tab may have been closed, ignore
+    console.error('Error handling tab activation:', error);
+  }
 });
 
 // Listen for tab updates
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.active) {
-    await handleTabChange(tabId);
+    try {
+      await handleTabChange(tabId);
+    } catch (error) {
+      // Tab may have been closed, ignore
+      console.error('Error handling tab update:', error);
+    }
   }
 });
 
@@ -67,9 +77,13 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
     stopTracking();
   } else {
     // Browser gained focus
-    const [tab] = await chrome.tabs.query({ active: true, windowId: windowId });
-    if (tab) {
-      await handleTabChange(tab.id);
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, windowId: windowId });
+      if (tab) {
+        await handleTabChange(tab.id);
+      }
+    } catch (error) {
+      // Window may have been closed, ignore
     }
   }
 });
@@ -80,7 +94,13 @@ async function handleTabChange(tabId) {
   stopTracking();
   
   // Get new tab info
-  const tab = await chrome.tabs.get(tabId);
+  let tab;
+  try {
+    tab = await chrome.tabs.get(tabId);
+  } catch (error) {
+    // Tab may have been closed, ignore
+    return;
+  }
   
   if (!tab || !tab.url) {
     return;
@@ -184,17 +204,24 @@ async function updateTimeUsage() {
 
 // Check if URL is blocked
 function isBlocked(url, blockedSites) {
+  if (!url) return false;
   return blockedSites.some(blocked => {
-    return url.includes(blocked) || blocked.includes(url);
+    // Exact match
+    if (url === blocked) return true;
+    // Subdomain match (e.g., blocked="example.com" matches "sub.example.com")
+    if (url.endsWith('.' + blocked)) return true;
+    return false;
   });
 }
 
 // Get matching time limit
 function getMatchingLimit(url, timeLimitedSites) {
+  if (!url) return null;
   for (const [domain, seconds] of Object.entries(timeLimitedSites)) {
-    if (url.includes(domain) || domain.includes(url)) {
-      return { domain, seconds };
-    }
+    // Exact match
+    if (url === domain) return { domain, seconds };
+    // Subdomain match (e.g., domain="example.com" matches "sub.example.com")
+    if (url.endsWith('.' + domain)) return { domain, seconds };
   }
   return null;
 }
@@ -225,32 +252,37 @@ async function redirectToBlockedPage(tabId, url, reason, domain = url) {
 
 // Listen for navigation events
 chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
-  if (details.frameId !== 0) {
-    return; // Only handle main frame
-  }
-  
-  const url = extractDomain(details.url);
-  
-  if (!url || details.url.startsWith('chrome://') || details.url.startsWith('chrome-extension://')) {
-    return;
-  }
-  
-  // Check blocked sites
-  const { blockedSites = [] } = await chrome.storage.local.get('blockedSites');
-  if (isBlocked(url, blockedSites)) {
-    await redirectToBlockedPage(details.tabId, url, 'blocked');
-    return;
-  }
-  
-  // Check time limits
-  const { timeLimitedSites = {}, timeUsage = {} } = await chrome.storage.local.get(['timeLimitedSites', 'timeUsage']);
-  const limit = getMatchingLimit(url, timeLimitedSites);
-  
-  if (limit) {
-    const used = timeUsage[limit.domain] || 0;
-    if (used >= limit.seconds) {
-      await redirectToBlockedPage(details.tabId, url, 'time-limit', limit.domain);
+  try {
+    if (details.frameId !== 0) {
+      return; // Only handle main frame
     }
+    
+    const url = extractDomain(details.url);
+    
+    if (!url || details.url.startsWith('chrome://') || details.url.startsWith('chrome-extension://')) {
+      return;
+    }
+    
+    // Check blocked sites
+    const { blockedSites = [] } = await chrome.storage.local.get('blockedSites');
+    if (isBlocked(url, blockedSites)) {
+      await redirectToBlockedPage(details.tabId, url, 'blocked');
+      return;
+    }
+    
+    // Check time limits
+    const { timeLimitedSites = {}, timeUsage = {} } = await chrome.storage.local.get(['timeLimitedSites', 'timeUsage']);
+    const limit = getMatchingLimit(url, timeLimitedSites);
+    
+    if (limit) {
+      const used = timeUsage[limit.domain] || 0;
+      if (used >= limit.seconds) {
+        await redirectToBlockedPage(details.tabId, url, 'time-limit', limit.domain);
+      }
+    }
+  } catch (error) {
+    // Tab may have been closed during navigation, ignore
+    console.error('Error handling navigation:', error);
   }
 });
 
