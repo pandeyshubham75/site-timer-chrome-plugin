@@ -1,0 +1,10 @@
+messages:
+  - role: system
+    content: >-
+      You are a very helpful technical architect assistant that breaks down
+      action items from a technical discussion.
+  - role: user
+    content: >-
+      Pull out the technical action items from this discussion transcript:
+      {{input}}
+model: openai/gpt-4o
