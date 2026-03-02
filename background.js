@@ -199,6 +199,14 @@ async function updateTimeUsage() {
     if (tabIdToBlock) {
       await redirectToBlockedPage(tabIdToBlock, urlToBlock, 'time-limit', trackingDomain);
     }
+  } else if (limit && activeTabId) {
+    // Show countdown warning when <= 60 seconds remain
+    const remaining = limit.seconds - timeUsage[trackingDomain];
+    if (remaining <= 60) {
+      chrome.tabs.sendMessage(activeTabId, { type: 'showCountdown', secondsLeft: remaining }).catch(() => {
+        // Content script may not be loaded on this page, ignore
+      });
+    }
   }
 }
 
