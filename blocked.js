@@ -9,7 +9,8 @@ const tips = [
   "Write down three things you want to accomplish today.",
   "Use this moment to organize your workspace for better productivity.",
   "Reflect on your goals. Are your daily actions aligned with them?",
-  "Remember: discipline is choosing between what you want now and what you want most."
+  "Remember: discipline is choosing between what you want now and what you want most.",
+  "Stop scrolling and do awesome things."
 ];
 
 // Get URL parameters
