@@ -90,6 +90,7 @@ async function loadBlockedSites() {
     const li = document.createElement('li');
     li.className = 'site-item';
     li.innerHTML = `
+      <img src="https://www.google.com/s2/favicons?domain=${url}&sz=32" class="site-icon" alt="icon" />
       <div class="site-info">
         <div class="site-url">${url}</div>
       </div>
@@ -140,6 +141,7 @@ async function loadTimeLimitedSites() {
     const li = document.createElement('li');
     li.className = 'site-item';
     li.innerHTML = `
+      <img src="https://www.google.com/s2/favicons?domain=${url}&sz=32" class="site-icon" alt="icon" />
       <div class="site-info">
         <div class="site-url">${url}</div>
         <div class="site-limit">Limit: ${limitMinutes} min/day</div>
@@ -174,6 +176,7 @@ function editTimeLimitedSite(listItem, url, currentMinutes) {
   
   // Replace content with edit form
   listItem.innerHTML = `
+    <img src="https://www.google.com/s2/favicons?domain=${url}&sz=32" class="site-icon" alt="icon" />
     <div class="site-info">
       <div class="site-url">${url}</div>
       <div class="edit-form">
@@ -257,26 +260,36 @@ async function loadStats() {
     let progressHtml = '';
     if (timeLimitedSites[url]) {
       const limitSeconds = timeLimitedSites[url];
-      const percentage = Math.min((usedSeconds / limitSeconds) * 100, 100);
+      const realPercentage = (usedSeconds / limitSeconds) * 100;
+      const displayPercentage = Math.min(realPercentage, 100);
+      
       let progressClass = '';
-      if (percentage >= 100) {
+      if (realPercentage >= 100) {
         progressClass = 'exceeded';
-      } else if (percentage >= 80) {
+      } else if (realPercentage >= 80) {
         progressClass = 'warning';
       }
       
       progressHtml = `
+        <div class="stat-limit-info">
+          <span>${Math.round(realPercentage)}% of daily limit</span>
+        </div>
         <div class="progress-bar">
-          <div class="progress-fill ${progressClass}" style="width: ${percentage}%"></div>
+          <div class="progress-fill ${progressClass}" style="width: ${displayPercentage}%"></div>
         </div>
       `;
     }
     
     div.innerHTML = `
-      <div class="stat-url">${url}</div>
-      <div class="stat-time">${timeStr}</div>
-      <div class="stat-label">Time spent today</div>
-      ${progressHtml}
+      <div class="stat-header">
+        <img src="https://www.google.com/s2/favicons?domain=${url}&sz=32" class="stat-icon" alt="icon" />
+        <div class="stat-url">${url}</div>
+      </div>
+      <div class="stat-body">
+        <div class="stat-time">${timeStr}</div>
+        <div class="stat-label">Time spent today</div>
+        ${progressHtml}
+      </div>
     `;
     
     container.appendChild(div);
